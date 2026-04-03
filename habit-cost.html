@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Habit Cost Calculator | ToolGarden</title>
+  <meta name="description" content="See how much a recurring habit costs over time and how many work hours it eats." />
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      color: #2f241d;
+      overflow-x: hidden;
+      position: relative;
+      background:
+        radial-gradient(circle at top left, rgba(255, 197, 109, 0.52), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(255, 130, 64, 0.34), transparent 32%),
+        linear-gradient(180deg, #f2dcc4 0%, #e3c3a8 100%);
+    }
+
+    .page-wrap {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .background {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .background span {
+      position: absolute;
+      bottom: -140px;
+      font-size: 2.5rem;
+      opacity: 0.30;
+      animation: floatUp linear infinite;
+      user-select: none;
+      filter: saturate(1.05);
+      text-shadow: 0 4px 18px rgba(255, 255, 255, 0.14);
+      will-change: transform, opacity;
+    }
+
+    .background span:nth-child(1)  { left: 3%;  animation-duration: 16s; animation-delay: 0s; }
+    .background span:nth-child(2)  { left: 10%; animation-duration: 20s; animation-delay: 3s; }
+    .background span:nth-child(3)  { left: 18%; animation-duration: 17s; animation-delay: 1s; }
+    .background span:nth-child(4)  { left: 26%; animation-duration: 22s; animation-delay: 5s; }
+    .background span:nth-child(5)  { left: 34%; animation-duration: 18s; animation-delay: 2s; }
+    .background span:nth-child(6)  { left: 42%; animation-duration: 21s; animation-delay: 6s; }
+    .background span:nth-child(7)  { left: 50%; animation-duration: 17s; animation-delay: 4s; }
+    .background span:nth-child(8)  { left: 58%; animation-duration: 23s; animation-delay: 1.5s; }
+    .background span:nth-child(9)  { left: 66%; animation-duration: 19s; animation-delay: 4.5s; }
+    .background span:nth-child(10) { left: 74%; animation-duration: 24s; animation-delay: 2.5s; }
+    .background span:nth-child(11) { left: 82%; animation-duration: 18s; animation-delay: 6.5s; }
+    .background span:nth-child(12) { left: 90%; animation-duration: 21s; animation-delay: 3.5s; }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(0) rotate(0deg) scale(0.96);
+        opacity: 0;
+      }
+      8% {
+        opacity: 0.30;
+      }
+      70% {
+        opacity: 0.30;
+      }
+      100% {
+        transform: translateY(-128vh) rotate(360deg) scale(1.08);
+        opacity: 0;
+      }
+    }
+
+    .glow,
+    .glow2 {
+      position: fixed;
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      filter: blur(135px);
+      opacity: 0.36;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .glow {
+      background: #ffb347;
+      top: 4%;
+      left: 4%;
+    }
+
+    .glow2 {
+      background: #ff8748;
+      bottom: 4%;
+      right: 4%;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 760px;
+      background:
+        linear-gradient(180deg, rgba(255, 243, 228, 0.98) 0%, rgba(252, 232, 212, 0.96) 100%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 25px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow:
+        0 20px 60px rgba(83, 49, 18, 0.15),
+        inset 0 1px 0 rgba(255,255,255,0.34);
+      border: 2px solid rgba(234, 88, 12, 0.26);
+      position: relative;
+      z-index: 3;
+    }
+
+    .tool-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .tool-link {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(234, 88, 12, 0.24);
+      background: rgba(255,255,255,0.55);
+      color: #8a4a24;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    }
+
+    .tool-link:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.78);
+      border-color: rgba(234, 88, 12, 0.38);
+    }
+
+    .tool-link.active {
+      background: linear-gradient(135deg, #f15a08, #ca430d);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 10px 22px rgba(234, 88, 12, 0.18);
+    }
+
+    .top-emoji {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.15;
+      color: #2f241d;
+    }
+
+    .subtitle {
+      color: #6a5648;
+      margin: 15px 0 25px;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      text-align: left;
+    }
+
+    .field-group {
+      text-align: left;
+    }
+
+    .input-label {
+      display: block;
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 10px;
+      color: #5c4638;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(214, 132, 74, 0.34);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,248,241,0.92) 100%);
+      color: #2f241d;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
+    }
+
+    input::placeholder {
+      color: #8d8075;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #ea580c;
+      box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.14);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 18px;
+      background: linear-gradient(135deg, #f15a08, #ca430d);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow:
+        0 10px 24px rgba(234, 88, 12, 0.20),
+        inset 0 1px 0 rgba(255,255,255,0.18);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+    }
+
+    .result-box {
+      margin-top: 20px;
+      padding: 24px 18px 18px;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.38), transparent 30%),
+        linear-gradient(145deg, #fff8f3 0%, #ffe6d5 45%, #ffd7bf 100%);
+      border: 2px solid rgba(234, 88, 12, 0.30);
+      box-shadow:
+        0 16px 30px rgba(179, 88, 29, 0.12),
+        inset 0 1px 0 rgba(255,255,255,0.52),
+        inset 0 -8px 18px rgba(234, 88, 12, 0.04);
+      position: relative;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .result-box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.10), transparent 32%),
+        radial-gradient(circle at 85% 85%, rgba(255, 164, 92, 0.10), transparent 30%);
+      pointer-events: none;
+    }
+
+    .result-box-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .result {
+      font-size: 22px;
+      font-weight: 800;
+      color: #b94814;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .subtext {
+      margin-top: 10px;
+      color: #665f59;
+      font-size: 14px;
+      line-height: 1.45;
+      min-height: 20px;
+      text-align: center;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .stat-card {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(234, 88, 12, 0.16);
+    }
+
+    .stat-title {
+      font-weight: 800;
+      color: #8d4517;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .stat-text {
+      color: #6a5648;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .upgrade-strip {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.62) 0%, rgba(255,243,232,0.78) 100%);
+      border: 1px solid rgba(234, 88, 12, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+
+    .upgrade-heading {
+      font-size: 15px;
+      font-weight: 800;
+      color: #8d4517;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .upgrade-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .upgrade-card {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.58);
+      border: 1px solid rgba(234, 88, 12, 0.14);
+      text-align: center;
+    }
+
+    .upgrade-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #9b5322;
+      margin-bottom: 6px;
+    }
+
+    .upgrade-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: #b94814;
+      line-height: 1.2;
+    }
+
+    .upgrade-copy {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #6a5648;
+      line-height: 1.45;
+    }
+
+    .info-section {
+      margin-top: 20px;
+      text-align: left;
+      font-size: 14px;
+      color: #5c4638;
+      line-height: 1.65;
+    }
+
+    .info-section h2 {
+      font-size: 18px;
+      margin: 0 0 10px;
+      color: #2f241d;
+    }
+
+    .mini-note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #8a7467;
+      line-height: 1.45;
+    }
+
+    .footer {
+      margin-top: 22px;
+      font-size: 12px;
+      color: #a79b92;
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    .footer a {
+      color: #a35a35;
+      text-decoration: none;
+      font-weight: 700;
+      margin: 0 5px;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .loading {
+      opacity: 0.86;
+      transform: scale(0.99);
+    }
+
+    .result-pop {
+      animation: resultPop 0.35s ease;
+    }
+
+    @keyframes resultPop {
+      0% {
+        transform: translateY(6px) scale(0.985);
+        opacity: 0.72;
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @media (min-width: 700px) {
+      .form-grid,
+      .stats-grid,
+      .upgrade-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .wide {
+        grid-column: 1 / -1;
+      }
+
+      .upgrade-card.wide {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .page-wrap {
+        padding: 16px 12px;
+      }
+
+      .card {
+        padding: 24px 16px 20px;
+        border-radius: 22px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .subtitle {
+        font-size: 14px;
+      }
+
+      .background span {
+        font-size: 2.35rem;
+        opacity: 0.34;
+      }
+
+      .glow,
+      .glow2 {
+        width: 250px;
+        height: 250px;
+        filter: blur(95px);
+        opacity: 0.32;
+      }
+
+      .tool-link {
+        font-size: 13px;
+        padding: 9px 12px;
+      }
+
+      .upgrade-value {
+        font-size: 18px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      body {
+        background:
+          radial-gradient(circle at 12% 18%, rgba(255, 209, 122, 0.56), transparent 23%),
+          radial-gradient(circle at 85% 78%, rgba(255, 140, 74, 0.34), transparent 26%),
+          linear-gradient(135deg, #e8ccb1 0%, #ddbda0 50%, #e9cfb7 100%);
+      }
+
+      .page-wrap {
+        padding: 48px;
+      }
+
+      .card {
+        padding: 42px 34px 34px;
+        border-radius: 30px;
+      }
+
+      .top-emoji {
+        font-size: 2.2rem;
+        margin-bottom: 10px;
+      }
+
+      h1 {
+        font-size: 3rem;
+        line-height: 1.04;
+        letter-spacing: -0.04em;
+        max-width: 560px;
+        margin: 0 auto;
+      }
+
+      .subtitle {
+        font-size: 1.12rem;
+        max-width: 560px;
+        margin: 18px auto 28px;
+      }
+
+      .input-label {
+        font-size: 16px;
+      }
+
+      input,
+      select {
+        padding: 18px 20px;
+        font-size: 18px;
+        border-radius: 16px;
+      }
+
+      button {
+        padding: 18px 20px;
+        font-size: 18px;
+        border-radius: 16px;
+      }
+
+      button:hover {
+        transform: translateY(-2px) scale(1.012);
+        box-shadow:
+          0 16px 36px rgba(234, 88, 12, 0.28),
+          inset 0 1px 0 rgba(255,255,255,0.20);
+        filter: brightness(1.04) saturate(1.04);
+      }
+
+      .result {
+        font-size: 2.2rem;
+      }
+
+      .subtext,
+      .stat-text,
+      .info-section {
+        font-size: 1rem;
+      }
+
+      .upgrade-heading {
+        font-size: 16px;
+      }
+
+      .upgrade-value {
+        font-size: 24px;
+      }
+
+      .upgrade-copy {
+        font-size: 14px;
+      }
+
+      .footer {
+        font-size: 13px;
+      }
+
+      .background span {
+        font-size: 3rem;
+        opacity: 0.28;
+      }
+
+      .glow,
+      .glow2 {
+        width: 470px;
+        height: 470px;
+        filter: blur(150px);
+        opacity: 0.32;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="background">
+    <span>⏳</span>
+    <span>💸</span>
+    <span>☕</span>
+    <span>🚬</span>
+    <span>💄</span>
+    <span>🍔</span>
+    <span>💳</span>
+    <span>🧠</span>
+    <span>✨</span>
+    <span>🧾</span>
+    <span>💼</span>
+    <span>💰</span>
+  </div>
+
+  <div class="glow"></div>
+  <div class="glow2"></div>
+
+  <div class="page-wrap">
+    <div class="card">
+      <div class="tool-switcher">
+        <a class="tool-link" href="index.html">Home</a>
+        <a class="tool-link" href="eating-out.html">Eating Out</a>
+        <a class="tool-link" href="coffee.html">Coffee Runs</a>
+        <a class="tool-link" href="subscriptions.html">Subscriptions</a>
+        <a class="tool-link active" href="habit-cost.html">Habit Cost</a>
+      </div>
+
+      <div class="top-emoji">⏳💸</div>
+
+      <h1>How Much Is Your Habit Really Costing You?</h1>
+
+      <p class="subtitle">
+        Pick a habit, enter what it costs, and see the money and work hours it eats over time. Small rituals can quietly become yearly plot twists.
+      </p>
+
+      <div class="form-grid">
+        <div class="field-group">
+          <label class="input-label" for="habitType">Habit type</label>
+          <select id="habitType">
+            <option value="coffee">Coffee</option>
+            <option value="fastFood">Fast Food</option>
+            <option value="vape">Vape / Cigs</option>
+            <option value="makeup">Makeup / Beauty</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label class="input-label" for="costPerUse">Cost per purchase / use</label>
+          <input type="number" id="costPerUse" placeholder="Example: 8.50" />
+        </div>
+
+        <div class="field-group">
+          <label class="input-label" for="timesPerWeek">How many times per week?</label>
+          <input type="number" id="timesPerWeek" placeholder="Example: 5" />
+        </div>
+
+        <div class="field-group">
+          <label class="input-label" for="hourlyWage">Hourly wage</label>
+          <input type="number" id="hourlyWage" placeholder="Example: 15" />
+        </div>
+
+        <div class="field-group wide">
+          <label class="input-label" for="customName">Custom habit name</label>
+          <input type="text" id="customName" placeholder="Optional if you choose Custom" />
+        </div>
+      </div>
+
+      <button id="calcButton" onclick="calculateHabit()">Show me the damage</button>
+
+      <div class="result-box" id="resultBox">
+        <div class="result-box-inner">
+          <div class="result" id="result">Your total will show here</div>
+          <div class="subtext" id="subtext">Small habits have a sneaky talent for becoming annual chaos.</div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-title">Weekly cost</div>
+              <div class="stat-text" id="weeklyCost">
+                Your weekly total will show here.
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-title">Monthly cost</div>
+              <div class="stat-text" id="monthlyCost">
+                Your monthly total will show here.
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-title">Yearly cost</div>
+              <div class="stat-text" id="yearlyCost">
+                Your yearly total will show here.
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-title">Hours worked</div>
+              <div class="stat-text" id="hoursWorked">
+                Your work-hours reality check will show here.
+              </div>
+            </div>
+          </div>
+
+          <div class="upgrade-strip">
+            <div class="upgrade-heading">What that could become</div>
+
+            <div class="upgrade-grid">
+              <div class="upgrade-card">
+                <div class="upgrade-label">Cost in 1 year</div>
+                <div class="upgrade-value" id="oneYearValue">$0.00</div>
+                <div class="upgrade-copy" id="oneYearCopy">
+                  Your yearly habit total will show here.
+                </div>
+              </div>
+
+              <div class="upgrade-card">
+                <div class="upgrade-label">Cost in 5 years</div>
+                <div class="upgrade-value" id="fiveYearValue">$0.00</div>
+                <div class="upgrade-copy" id="fiveYearCopy">
+                  Your five-year habit total will show here.
+                </div>
+              </div>
+
+              <div class="upgrade-card wide">
+                <div class="upgrade-label">Tiny habit, bigger picture</div>
+                <div class="upgrade-copy" id="upgradeComparison">
+                  That future-value reality check will show up here after you calculate.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mini-note">
+        This is a rough estimate based on the cost and frequency you enter. Real spending can vary, but the stacking effect is very real.
+      </div>
+
+      <div class="info-section">
+        <h2>Why this one hits differently</h2>
+        <p>
+          Habit spending usually feels small because it happens in tiny pieces. But once you multiply it by weeks, months, and years, the total can get loud very quickly.
+        </p>
+
+        <h2>What the hourly wage section does</h2>
+        <p>
+          The work-hours estimate shows how much labor time your habit costs in a year. It is not meant to guilt-trip you, just to turn abstract money into something easier to feel.
+        </p>
+      </div>
+
+      <div class="footer">
+        ToolGarden • tiny tools, big realizations<br><br>
+        <a href="index.html">Home</a> •
+        <a href="about.html">About</a> •
+        <a href="privacy.html">Privacy</a> •
+        <a href="terms.html">Terms</a> •
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function money(num) {
+      return `$${num.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`;
+    }
+
+    function getHabitLabel(type, customName) {
+      if (type === "custom" && customName.trim()) {
+        return customName.trim();
+      }
+
+      const labels = {
+        coffee: "coffee habit",
+        fastFood: "fast food habit",
+        vape: "vape / cigarette habit",
+        makeup: "beauty habit",
+        custom: "habit"
+      };
+
+      return labels[type] || "habit";
+    }
+
+    function getHabitReaction(yearly, fiveYear, label) {
+      if (yearly < 100) {
+        return `Your ${label} is still pretty small, but yes, it is absolutely doing math behind your back.`;
+      } else if (yearly < 500) {
+        return `Your ${label} feels harmless in the moment, but it’s definitely not free.`;
+      } else if (yearly < 1500) {
+        return `This is where your ${label} stops being a tiny treat and starts becoming real yearly money. In 5 years, that's ${money(fiveYear)}.`;
+      } else if (yearly < 3500) {
+        return `Okay yep, your ${label} has grown into a real budget character. In 5 years, that's ${money(fiveYear)}.`;
+      } else if (yearly < 7000) {
+        return `Your ${label} is officially expensive enough to deserve a dramatic side-eye. In 5 years, that's ${money(fiveYear)} 😬`;
+      } else {
+        return `Respectfully, your ${label} is running a full financial side quest. In 5 years, that's ${money(fiveYear)} 💀`;
+      }
+    }
+
+    function getHabitComparison(amount) {
+      if (amount < 250) {
+        return "That’s still money you could redirect into groceries, bills, or literally anything less repetitive.";
+      } else if (amount < 1000) {
+        return "That’s enough to actually feel. A small habit can be surprisingly loud over time.";
+      } else if (amount < 3000) {
+        return "That could become savings, debt relief, or a meaningful cushion instead of getting quietly eaten by routine.";
+      } else if (amount < 7000) {
+        return "That is the kind of total that makes people stare at the screen and suddenly rethink autopilot habits.";
+      } else {
+        return "That is no longer little-habit math. That is full-on future-you money.";
+      }
+    }
+
+    function calculateHabit() {
+      const habitType = document.getElementById("habitType").value;
+      const costPerUse = Number(document.getElementById("costPerUse").value);
+      const timesPerWeek = Number(document.getElementById("timesPerWeek").value);
+      const hourlyWage = Number(document.getElementById("hourlyWage").value);
+      const customName = document.getElementById("customName").value || "";
+
+      const result = document.getElementById("result");
+      const subtext = document.getElementById("subtext");
+      const weeklyCost = document.getElementById("weeklyCost");
+      const monthlyCost = document.getElementById("monthlyCost");
+      const yearlyCost = document.getElementById("yearlyCost");
+      const hoursWorked = document.getElementById("hoursWorked");
+
+      const oneYearValue = document.getElementById("oneYearValue");
+      const fiveYearValue = document.getElementById("fiveYearValue");
+      const oneYearCopy = document.getElementById("oneYearCopy");
+      const fiveYearCopy = document.getElementById("fiveYearCopy");
+      const upgradeComparison = document.getElementById("upgradeComparison");
+
+      const resultBox = document.getElementById("resultBox");
+      const button = document.getElementById("calcButton");
+
+      if (!costPerUse || !timesPerWeek || costPerUse < 0 || timesPerWeek <= 0) {
+        result.innerText = "Enter real numbers 👀";
+        subtext.innerText = "Try your honest cost and frequency.";
+        weeklyCost.innerText = "Your weekly total will show here.";
+        monthlyCost.innerText = "Your monthly total will show here.";
+        yearlyCost.innerText = "Your yearly total will show here.";
+        hoursWorked.innerText = "Your work-hours reality check will show here.";
+        oneYearValue.innerText = "$0.00";
+        fiveYearValue.innerText = "$0.00";
+        oneYearCopy.innerText = "Your yearly habit total will show here.";
+        fiveYearCopy.innerText = "Your five-year habit total will show here.";
+        upgradeComparison.innerText = "That future-value reality check will show up here after you calculate.";
+        return;
+      }
+
+      const label = getHabitLabel(habitType, customName);
+      const weekly = costPerUse * timesPerWeek;
+      const monthly = weekly * 4.33;
+      const yearly = weekly * 52;
+      const fiveYear = yearly * 5;
+      const hours = hourlyWage > 0 ? yearly / hourlyWage : 0;
+
+      button.disabled = true;
+      button.style.opacity = "0.9";
+      button.style.cursor = "wait";
+
+      resultBox.classList.remove("result-pop");
+      void resultBox.offsetWidth;
+      resultBox.classList.add("loading");
+
+      result.innerText = "Calculating the damage...";
+      subtext.innerText = "Watching your routine quietly multiply itself...";
+      weeklyCost.innerText = "Calculating...";
+      monthlyCost.innerText = "Calculating...";
+      yearlyCost.innerText = "Calculating...";
+      hoursWorked.innerText = "Calculating...";
+      oneYearValue.innerText = "...";
+      fiveYearValue.innerText = "...";
+      oneYearCopy.innerText = "Calculating...";
+      fiveYearCopy.innerText = "Calculating...";
+      upgradeComparison.innerText = "Calculating...";
+
+      setTimeout(() => {
+        result.innerText = `${money(yearly)} per year 😬`;
+        subtext.innerText = getHabitReaction(yearly, fiveYear, label);
+
+        weeklyCost.innerText = `${money(weekly)} every week.`;
+        monthlyCost.innerText = `${money(monthly)} per month.`;
+        yearlyCost.innerText = `${money(yearly)} every year.`;
+        hoursWorked.innerText = hourlyWage > 0
+          ? `That is about ${hours.toFixed(1)} hours of work every year.`
+          : `Add your hourly wage to see how many work hours this costs.`;
+
+        oneYearValue.innerText = money(yearly);
+        fiveYearValue.innerText = money(fiveYear);
+        oneYearCopy.innerText = `That’s what your current ${label} costs in a single year.`;
+        fiveYearCopy.innerText = `Same habit, same pace, stretched across 5 years.`;
+        upgradeComparison.innerText = getHabitComparison(fiveYear);
+
+        resultBox.classList.remove("loading");
+        resultBox.classList.add("result-pop");
+
+        button.disabled = false;
+        button.style.opacity = "1";
+        button.style.cursor = "pointer";
+      }, 500);
+    }
+  </script>
+</body>
+</html>
