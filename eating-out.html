@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Eating Out Calculator | ToolGarden</title>
+  <meta name="description" content="Estimate how much you spend eating out each year and compare it to the cost of making common meals at home." />
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      color: #2f241d;
+      overflow-x: hidden;
+      position: relative;
+      background:
+        radial-gradient(circle at top left, rgba(255, 197, 109, 0.52), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(255, 130, 64, 0.34), transparent 32%),
+        linear-gradient(180deg, #f2dcc4 0%, #e3c3a8 100%);
+    }
+
+    .page-wrap {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .background {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .background span {
+      position: absolute;
+      bottom: -140px;
+      font-size: 2.5rem;
+      opacity: 0.30;
+      animation: floatUp linear infinite;
+      user-select: none;
+      filter: saturate(1.05);
+      text-shadow: 0 4px 18px rgba(255, 255, 255, 0.14);
+      will-change: transform, opacity;
+    }
+
+    .background span:nth-child(1)  { left: 3%;  animation-duration: 16s; animation-delay: 0s; }
+    .background span:nth-child(2)  { left: 10%; animation-duration: 20s; animation-delay: 3s; }
+    .background span:nth-child(3)  { left: 18%; animation-duration: 17s; animation-delay: 1s; }
+    .background span:nth-child(4)  { left: 26%; animation-duration: 22s; animation-delay: 5s; }
+    .background span:nth-child(5)  { left: 34%; animation-duration: 18s; animation-delay: 2s; }
+    .background span:nth-child(6)  { left: 42%; animation-duration: 21s; animation-delay: 6s; }
+    .background span:nth-child(7)  { left: 50%; animation-duration: 17s; animation-delay: 4s; }
+    .background span:nth-child(8)  { left: 58%; animation-duration: 23s; animation-delay: 1.5s; }
+    .background span:nth-child(9)  { left: 66%; animation-duration: 19s; animation-delay: 4.5s; }
+    .background span:nth-child(10) { left: 74%; animation-duration: 24s; animation-delay: 2.5s; }
+    .background span:nth-child(11) { left: 82%; animation-duration: 18s; animation-delay: 6.5s; }
+    .background span:nth-child(12) { left: 90%; animation-duration: 21s; animation-delay: 3.5s; }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(0) rotate(0deg) scale(0.96);
+        opacity: 0;
+      }
+      8% {
+        opacity: 0.30;
+      }
+      70% {
+        opacity: 0.30;
+      }
+      100% {
+        transform: translateY(-128vh) rotate(360deg) scale(1.08);
+        opacity: 0;
+      }
+    }
+
+    .glow,
+    .glow2 {
+      position: fixed;
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      filter: blur(135px);
+      opacity: 0.36;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .glow {
+      background: #ffb347;
+      top: 4%;
+      left: 4%;
+    }
+
+    .glow2 {
+      background: #ff8748;
+      bottom: 4%;
+      right: 4%;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 760px;
+      background:
+        linear-gradient(180deg, rgba(255, 243, 228, 0.98) 0%, rgba(252, 232, 212, 0.96) 100%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 25px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow:
+        0 20px 60px rgba(83, 49, 18, 0.15),
+        inset 0 1px 0 rgba(255,255,255,0.34);
+      border: 2px solid rgba(234, 88, 12, 0.26);
+      position: relative;
+      z-index: 3;
+    }
+
+    .tool-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .tool-link {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(234, 88, 12, 0.24);
+      background: rgba(255,255,255,0.55);
+      color: #8a4a24;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    }
+
+    .tool-link:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.78);
+      border-color: rgba(234, 88, 12, 0.38);
+    }
+
+    .tool-link.active {
+      background: linear-gradient(135deg, #f15a08, #ca430d);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 10px 22px rgba(234, 88, 12, 0.18);
+    }
+
+    .top-emoji {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.15;
+      color: #2f241d;
+    }
+
+    .subtitle {
+      color: #6a5648;
+      margin: 15px 0 25px;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      text-align: left;
+    }
+
+    .field-group {
+      text-align: left;
+    }
+
+    .input-label {
+      display: block;
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 10px;
+      color: #5c4638;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(214, 132, 74, 0.34);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,248,241,0.92) 100%);
+      color: #2f241d;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
+    }
+
+    input::placeholder {
+      color: #8d8075;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #ea580c;
+      box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.14);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 18px;
+      background: linear-gradient(135deg, #f15a08, #ca430d);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow:
+        0 10px 24px rgba(234, 88, 12, 0.20),
+        inset 0 1px 0 rgba(255,255,255,0.18);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+    }
+
+    .result-box {
+      margin-top: 20px;
+      padding: 24px 18px 18px;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.38), transparent 30%),
+        linear-gradient(145deg, #fff8f3 0%, #ffe6d5 45%, #ffd7bf 100%);
+      border: 2px solid rgba(234, 88, 12, 0.30);
+      box-shadow:
+        0 16px 30px rgba(179, 88, 29, 0.12),
+        inset 0 1px 0 rgba(255,255,255,0.52),
+        inset 0 -8px 18px rgba(234, 88, 12, 0.04);
+      position: relative;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .result-box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.10), transparent 32%),
+        radial-gradient(circle at 85% 85%, rgba(255, 164, 92, 0.10), transparent 30%);
+      pointer-events: none;
+    }
+
+    .result-box-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .result {
+      font-size: 22px;
+      font-weight: 800;
+      color: #b94814;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .subtext {
+      margin-top: 10px;
+      color: #665f59;
+      font-size: 14px;
+      line-height: 1.45;
+      min-height: 20px;
+      text-align: center;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .stat-card {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(234, 88, 12, 0.16);
+    }
+
+    .stat-title {
+      font-weight: 800;
+      color: #8d4517;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .stat-text {
+      color: #6a5648;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .upgrade-strip {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.62) 0%, rgba(255,243,232,0.78) 100%);
+      border: 1px solid rgba(234, 88, 12, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+
+    .upgrade-heading {
+      font-size: 15px;
+      font-weight: 800;
+      color: #8d4517;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .upgrade-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .upgrade-card {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.58);
+      border: 1px solid rgba(234, 88, 12, 0.14);
+      text-align: center;
+    }
+
+    .upgrade-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #9b5322;
+      margin-bottom: 6px;
+    }
+
+    .upgrade-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: #b94814;
+      line-height: 1.2;
+    }
+
+    .upgrade-copy {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #6a5648;
+      line-height: 1.45;
+    }
+
+    .info-section {
+      margin-top: 20px;
+      text-align: left;
+      font-size: 14px;
+      color: #5c4638;
+      line-height: 1.65;
+    }
+
+    .info-section h2 {
+      font-size: 18px;
+      margin: 0 0 10px;
+      color: #2f241d;
+    }
+
+    .mini-note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #8a7467;
+      line-height: 1.45;
+    }
+
+    .footer {
+      margin-top: 22px;
+      font-size: 12px;
+      color: #a79b92;
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    .footer a {
+      color: #a35a35;
+      text-decoration: none;
+      font-weight: 700;
+      margin: 0 5px;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .loading {
+      opacity: 0.86;
+      transform: scale(0.99);
+    }
+
+    .result-pop {
+      animation: resultPop 0.35s ease;
+    }
+
+    @keyframes resultPop {
+      0% {
+        transform: translateY(6px) scale(0.985);
+        opacity: 0.72;
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @media (min-width: 700px) {
+      .form-grid,
+      .stats-grid,
+      .upgrade-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .meal-wide {
+        grid-column: 1 / -1;
+      }
+
+      .upgrade-card.wide {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .page-wrap {
+        padding: 16px 12px;
+      }
+
+      .card {
+        padding: 24px 16px 20px;
+        border-radius: 22px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .subtitle {
+        font-size: 14px;
+      }
+
+      .background span {
+        font-size: 2.35rem;
+        opacity: 0.34;
+      }
+
+      .glow,
+      .glow2 {
+        width: 250px;
+        height: 250px;
+        filter: blur(95px);
+        opacity: 0.32;
+      }
+
+      .tool-link {
+        font-size: 13px;
+        padding: 9px 12px;
+      }
+
+      .upgrade-value {
+        font-size: 18px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      body {
+        background:
+          radial-gradient(circle at 12% 18%, rgba(255, 209, 122, 0.56), transparent 23%),
+          radial-gradient(circle at 85% 78%, rgba(255, 140, 74, 0.34), transparent 26%),
+          linear-gradient(135deg, #e8ccb1 0%, #ddbda0 50%, #e9cfb7 100%);
+      }
+
+      .page-wrap {
+        padding: 48px;
+      }
+
+      .card {
+        padding: 42px 34px 34px;
+        border-radius: 30px;
+      }
+
+      .top-emoji {
+        font-size: 2.2rem;
+        margin-bottom: 10px;
+      }
+
+      h1 {
+        font-size: 3rem;
+        line-height: 1.04;
+        letter-spacing: -0.04em;
+        max-width: 560px;
+        margin: 0 auto;
+      }
+
+      .subtitle {
+        font-size: 1.12rem;
+        max-width: 560px;
+        margin: 18px auto 28px;
+      }
+
+      .input-label {
+        font-size: 16px;
+      }
+
+      input,
+      select {
+        padding: 18px 20px;
+        font-size: 18px;
+        border-radius: 16px;
+      }
+
+      button {
+        padding: 18px 20px;
+        font-size: 18px;
+        border-radius: 16px;
+      }
+
+      button:hover {
+        transform: translateY(-2px) scale(1.012);
+        box-shadow:
+          0 16px 36px rgba(234, 88, 12, 0.28),
+          inset 0 1px 0 rgba(255,255,255,0.20);
+        filter: brightness(1.04) saturate(1.04);
+      }
+
+      .result {
+        font-size: 2.2rem;
+      }
+
+      .subtext,
+      .stat-text,
+      .info-section {
+        font-size: 1rem;
+      }
+
+      .upgrade-heading {
+        font-size: 16px;
+      }
+
+      .upgrade-value {
+        font-size: 24px;
+      }
+
+      .upgrade-copy {
+        font-size: 14px;
+      }
+
+      .footer {
+        font-size: 13px;
+      }
+
+      .background span {
+        font-size: 3rem;
+        opacity: 0.28;
+      }
+
+      .glow,
+      .glow2 {
+        width: 470px;
+        height: 470px;
+        filter: blur(150px);
+        opacity: 0.32;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="background">
+    <span>🍔</span>
+    <span>💸</span>
+    <span>🍟</span>
+    <span>🥤</span>
+    <span>💳</span>
+    <span>🍕</span>
+    <span>🧾</span>
+    <span>🍗</span>
+    <span>🧋</span>
+    <span>🍩</span>
+    <span>💰</span>
+    <span>🥪</span>
+  </div>
+
+  <div class="glow"></div>
+  <div class="glow2"></div>
+
+  <div class="page-wrap">
+    <div class="card">
+      <div class="tool-switcher">
+        <a class="tool-link" href="index.html">Home</a>
+        <a class="tool-link active" href="eating-out.html">Eating Out</a>
+        <a class="tool-link" href="coffee.html">Coffee Runs</a>
+        <a class="tool-link" href="subscriptions.html">Subscriptions</a>
+        <a class="tool-link" href="habit-cost.html">Habit Cost</a>
+      </div>
+
+      <div class="top-emoji">🍔💸</div>
+
+      <h1>How Much Do You Spend Eating Out?</h1>
+
+      <p class="subtitle">
+        Compare your current eating-out spending to what common homemade meals could cost instead. Tiny just-grabbing-something habits can become a whole budget side quest.
+      </p>
+
+      <div class="form-grid">
+        <div class="field-group">
+          <label class="input-label" for="weeklySpend">Your weekly eating-out spending</label>
+          <input type="number" id="weeklySpend" placeholder="Enter $ per week" />
+        </div>
+
+        <div class="field-group">
+          <label class="input-label" for="mealsPerWeek">How many meals do you buy per week?</label>
+          <input type="number" id="mealsPerWeek" placeholder="Example: 5" />
+        </div>
+
+        <div class="field-group meal-wide">
+          <label class="input-label" for="mealType">Choose a homemade meal comparison</label>
+          <select id="mealType">
+            <option value="spaghetti">Spaghetti</option>
+            <option value="shawarma">Chicken Shawarma</option>
+            <option value="friedRice">Fried Rice</option>
+            <option value="sandwiches">Sandwiches</option>
+            <option value="tacos">Tacos</option>
+            <option value="alfredo">Pasta Alfredo</option>
+            <option value="burgers">Homemade Burgers</option>
+            <option value="riceBowls">Chicken & Rice Bowls</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="calcButton" onclick="calculate()">Show me the damage</button>
+
+      <div class="result-box" id="resultBox">
+        <div class="result-box-inner">
+          <div class="result" id="result">Your total will show here</div>
+          <div class="subtext" id="subtext">Tiny burger bites can become a giant money monster.</div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-title">Homemade meal cost estimate</div>
+              <div class="stat-text" id="homeMealCost">
+                Pick a meal to see its estimated at-home cost range.
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-title">Estimated cost per bought meal</div>
+              <div class="stat-text" id="boughtMealCost">
+                Enter your weekly spending and number of meals.
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-title">Estimated weekly home-cooked cost</div>
+              <div class="stat-text" id="weeklyHomeCost">
+                We’ll estimate what those same meals could cost at home.
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-title">Potential savings range</div>
+              <div class="stat-text" id="saveText">
+                Your lower, average, and higher savings estimate will show here.
+              </div>
+            </div>
+          </div>
+
+          <div class="upgrade-strip">
+            <div class="upgrade-heading">What that could become</div>
+
+            <div class="upgrade-grid">
+              <div class="upgrade-card">
+                <div class="upgrade-label">Average savings in 1 year</div>
+                <div class="upgrade-value" id="oneYearValue">$0.00</div>
+                <div class="upgrade-copy" id="oneYearCopy">
+                  Your average yearly savings estimate will show here.
+                </div>
+              </div>
+
+              <div class="upgrade-card">
+                <div class="upgrade-label">Average savings in 5 years</div>
+                <div class="upgrade-value" id="fiveYearValue">$0.00</div>
+                <div class="upgrade-copy" id="fiveYearCopy">
+                  Your average five-year savings estimate will show here.
+                </div>
+              </div>
+
+              <div class="upgrade-card wide">
+                <div class="upgrade-label">Tiny habit, bigger picture</div>
+                <div class="upgrade-copy" id="upgradeComparison">
+                  That future-value reality check will show up here after you calculate.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mini-note">
+        These are rough comparison estimates, not sacred kitchen law. They’re meant to give a realistic range, not audit your pantry.
+      </div>
+
+      <div class="info-section">
+        <h2>How this works</h2>
+        <p>
+          This tool compares what you currently spend on eating out to the estimated cost of making similar meals at home. Since ingredient prices vary, it gives you a savings range instead of pretending the universe runs on one exact spaghetti number.
+        </p>
+
+        <h2>Why ranges are better</h2>
+        <p>
+          Home cooking costs can shift depending on store prices, portion size, protein choice, sauces, and whether you’re cooking basic or going full kitchen wizard. That’s why this tool shows lower, average, and higher savings possibilities.
+        </p>
+      </div>
+
+      <div class="footer">
+        ToolGarden • tiny tools, big realizations<br><br>
+        <a href="index.html">Home</a> •
+        <a href="about.html">About</a> •
+        <a href="privacy.html">Privacy</a> •
+        <a href="terms.html">Terms</a> •
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const mealData = {
+      spaghetti: {
+        name: "Spaghetti",
+        low: 1.90,
+        avg: 2.25,
+        high: 2.90
+      },
+      shawarma: {
+        name: "Chicken Shawarma",
+        low: 3.10,
+        avg: 3.75,
+        high: 4.60
+      },
+      friedRice: {
+        name: "Fried Rice",
+        low: 1.75,
+        avg: 2.10,
+        high: 2.80
+      },
+      sandwiches: {
+        name: "Sandwiches",
+        low: 1.60,
+        avg: 2.00,
+        high: 2.70
+      },
+      tacos: {
+        name: "Tacos",
+        low: 2.20,
+        avg: 2.80,
+        high: 3.60
+      },
+      alfredo: {
+        name: "Pasta Alfredo",
+        low: 2.30,
+        avg: 2.90,
+        high: 3.80
+      },
+      burgers: {
+        name: "Homemade Burgers",
+        low: 2.70,
+        avg: 3.40,
+        high: 4.40
+      },
+      riceBowls: {
+        name: "Chicken & Rice Bowls",
+        low: 2.40,
+        avg: 3.10,
+        high: 4.00
+      }
+    };
+
+    const reactions = {
+      tiny: [
+        "Be honest. are you powered by leftovers and denial?",
+        "This number is so low it feels like your snack spending has a lawyer.",
+        "Are you sure? That total looks suspiciously well-behaved.",
+        "Either you're wildly disciplined or quietly forgetting a few fries."
+      ],
+      low: [
+        "Not bad. This still has tiny leak energy, though.",
+        "Cute little total... until it starts multiplying in the dark.",
+        "This feels harmless, which is exactly how it sneaks up on people.",
+        "Small enough to shrug at. Big enough to matter."
+      ],
+      mediumLow: [
+        "This is where just something quick starts building a side quest.",
+        "A very casual habit with slightly expensive hobbies.",
+        "Nothing terrifying here, but your wallet has definitely noticed.",
+        "Mildly rude. Not criminal. Still rude."
+      ],
+      medium: [
+        "Okay yep, this is becoming a real character in your budget.",
+        "This is firmly in how did it get that high territory.",
+        "That money could have had a beautiful future elsewhere.",
+        "Your convenience spending is starting to develop lore."
+      ],
+      high: [
+        "This is getting spicy. Your bank account is absolutely side-eyeing you.",
+        "That total has some weight to it. Like emotional weight.",
+        "This is no longer a harmless little treat habit.",
+        "Your food apps are probably cheering every time you open them."
+      ],
+      veryHigh: [
+        "At this point, takeout is less of a choice and more of a recurring character arc.",
+        "This number arrived wearing boots and demanding attention.",
+        "We're officially beyond snack math and into plot twist math.",
+        "Your convenience budget is moving like a final boss."
+      ],
+      absurd: [
+        "Respectfully, this has become a lifestyle brand.",
+        "This total is giving luxury chaos with dipping sauce.",
+        "At this level, the delivery app probably knows your aura.",
+        "Your wallet didn't lose a battle. It lost a whole campaign."
+      ]
+    };
+
+    function randomFrom(array) {
+      return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function getReaction(yearly, fiveYear) {
+      if (yearly <= 104) {
+        return randomFrom(reactions.tiny);
+      } else if (yearly <= 750) {
+        return randomFrom(reactions.low);
+      } else if (yearly <= 1800) {
+        return randomFrom(reactions.mediumLow);
+      } else if (yearly <= 3500) {
+        return `${randomFrom(reactions.medium)} In 5 years, that's ${formatMoney(fiveYear)}.`;
+      } else if (yearly <= 6000) {
+        return `${randomFrom(reactions.high)} In 5 years, that's ${formatMoney(fiveYear)}.`;
+      } else if (yearly <= 10000) {
+        return `${randomFrom(reactions.veryHigh)} In 5 years, that's ${formatMoney(fiveYear)} 😬`;
+      } else {
+        return `${randomFrom(reactions.absurd)} In 5 years, that's ${formatMoney(fiveYear)} 💀`;
+      }
+    }
+
+    function formatMoney(value) {
+      return `$${value.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`;
+    }
+
+    function getSavingsComparison(amount) {
+      if (amount < 150) {
+        return "That’s a few groceries, a couple of comfort-food nights, or one less tiny budget leak wearing a fake mustache.";
+      } else if (amount < 500) {
+        return "That’s enough to cover a solid grocery reset, a utility bill chunk, or a very smug kitchen era.";
+      } else if (amount < 1200) {
+        return "That’s getting into real-money territory. Think groceries, bills, or a little emergency-cushion energy.";
+      } else if (amount < 3000) {
+        return "That could become a meaningful cushion instead of disappearing into burgers, fries, and mysterious convenience fees.";
+      } else if (amount < 7000) {
+        return "That’s the kind of money that starts feeling like a mini life upgrade instead of random meal confetti.";
+      } else {
+        return "That is no longer snack math. That’s full-on future-you money.";
+      }
+    }
+
+    function calculate() {
+      const weeklySpend = Number(document.getElementById("weeklySpend").value);
+      const mealsPerWeek = Number(document.getElementById("mealsPerWeek").value);
+      const mealTypeKey = document.getElementById("mealType").value;
+      const meal = mealData[mealTypeKey];
+
+      const result = document.getElementById("result");
+      const subtext = document.getElementById("subtext");
+      const resultBox = document.getElementById("resultBox");
+      const button = document.getElementById("calcButton");
+
+      const homeMealCost = document.getElementById("homeMealCost");
+      const boughtMealCost = document.getElementById("boughtMealCost");
+      const weeklyHomeCost = document.getElementById("weeklyHomeCost");
+      const saveText = document.getElementById("saveText");
+
+      const oneYearValue = document.getElementById("oneYearValue");
+      const fiveYearValue = document.getElementById("fiveYearValue");
+      const oneYearCopy = document.getElementById("oneYearCopy");
+      const fiveYearCopy = document.getElementById("fiveYearCopy");
+      const upgradeComparison = document.getElementById("upgradeComparison");
+
+      if (!weeklySpend || weeklySpend < 0 || !mealsPerWeek || mealsPerWeek <= 0) {
+        result.innerText = "Enter real numbers 👀";
+        subtext.innerText = "Try your honest weekly spending and meal count.";
+        homeMealCost.innerText = "Pick a meal and enter valid amounts.";
+        boughtMealCost.innerText = "We need your weekly spend and number of bought meals.";
+        weeklyHomeCost.innerText = "We’ll estimate this once the numbers are in.";
+        saveText.innerText = "Savings range will show here after valid input.";
+
+        oneYearValue.innerText = "$0.00";
+        fiveYearValue.innerText = "$0.00";
+        oneYearCopy.innerText = "Your average yearly savings estimate will show here.";
+        fiveYearCopy.innerText = "Your average five-year savings estimate will show here.";
+        upgradeComparison.innerText = "That future-value reality check will show up here after you calculate.";
+        return;
+      }
+
+      const yearly = weeklySpend * 52;
+      const fiveYear = yearly * 5;
+      const averageBoughtMeal = weeklySpend / mealsPerWeek;
+
+      const weeklyHomeLow = meal.low * mealsPerWeek;
+      const weeklyHomeAvg = meal.avg * mealsPerWeek;
+      const weeklyHomeHigh = meal.high * mealsPerWeek;
+
+      const yearlySaveLow = Math.max(0, yearly - (weeklyHomeHigh * 52));
+      const yearlySaveAvg = Math.max(0, yearly - (weeklyHomeAvg * 52));
+      const yearlySaveHigh = Math.max(0, yearly - (weeklyHomeLow * 52));
+
+      const fiveYearSaveLow = yearlySaveLow * 5;
+      const fiveYearSaveAvg = yearlySaveAvg * 5;
+      const fiveYearSaveHigh = yearlySaveHigh * 5;
+
+      button.disabled = true;
+      button.style.opacity = "0.9";
+      button.style.cursor = "wait";
+
+      resultBox.classList.remove("result-pop");
+      void resultBox.offsetWidth;
+      resultBox.classList.add("loading");
+
+      result.innerText = "Calculating the damage...";
+      subtext.innerText = "Giving your snacks a dramatic annual reveal...";
+      homeMealCost.innerText = "Calculating...";
+      boughtMealCost.innerText = "Calculating...";
+      weeklyHomeCost.innerText = "Calculating...";
+      saveText.innerText = "Calculating...";
+      oneYearValue.innerText = "...";
+      fiveYearValue.innerText = "...";
+      oneYearCopy.innerText = "Calculating...";
+      fiveYearCopy.innerText = "Calculating...";
+      upgradeComparison.innerText = "Calculating...";
+
+      setTimeout(() => {
+        result.innerText = `${formatMoney(yearly)} per year 😳`;
+        subtext.innerText = getReaction(yearly, fiveYear);
+
+        homeMealCost.innerText = `${meal.name} at home: about ${formatMoney(meal.low)} to ${formatMoney(meal.high)} per meal, with an average around ${formatMoney(meal.avg)}.`;
+        boughtMealCost.innerText = `Based on your numbers, you're spending about ${formatMoney(averageBoughtMeal)} per bought meal.`;
+        weeklyHomeCost.innerText = `If you made ${mealsPerWeek} of those meals at home, that could cost about ${formatMoney(weeklyHomeLow)} to ${formatMoney(weeklyHomeHigh)} per week, averaging around ${formatMoney(weeklyHomeAvg)}.`;
+        saveText.innerText = `Potential yearly savings: about ${formatMoney(yearlySaveLow)} to ${formatMoney(yearlySaveHigh)}, averaging around ${formatMoney(yearlySaveAvg)}. Over 5 years, that could become about ${formatMoney(fiveYearSaveLow)} to ${formatMoney(fiveYearSaveHigh)}.`;
+
+        oneYearValue.innerText = formatMoney(yearlySaveAvg);
+        fiveYearValue.innerText = formatMoney(fiveYearSaveAvg);
+        oneYearCopy.innerText = "That’s your average estimated savings if you replaced those meals with homemade versions for a year.";
+        fiveYearCopy.innerText = "Same habit shift, stretched over 5 years. Tiny choices can stack like little budget goblins.";
+        upgradeComparison.innerText = getSavingsComparison(fiveYearSaveAvg);
+
+        resultBox.classList.remove("loading");
+        resultBox.classList.add("result-pop");
+
+        button.disabled = false;
+        button.style.opacity = "1";
+        button.style.cursor = "pointer";
+      }, 500);
+    }
+  </script>
+</body>
+</html>
